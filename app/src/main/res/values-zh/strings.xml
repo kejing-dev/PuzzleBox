@@ -44,7 +44,7 @@
     <string name="status_blocked">上面压着别的，先拿上面那块。</string>
     <string name="status_restored">接着装%1$s。</string>
     <string name="status_turn_here">在这里转。</string>
-    <string name="readout">已放 %1$d / %2$d · %3$s · %4$d 步 · 最好 %5$s</string>
+    <string name="readout">已放 %1$d / %2$d · %3$s · %4$s · 最好 %5$s</string>
     <string name="best_none">—</string>
     <string name="plate_line">%1$s · %2$d / %3$d · %4$s</string>
     <string name="plate_line_short">%1$s · %2$d / %3$d</string>
@@ -56,7 +56,7 @@
     <string name="plate_too_big">这个方向放不进</string>
     <string name="plate_hole">底下空了一格</string>
     <string name="plate_blocked">上面压着别的</string>
-    <string name="result_title">装满了！%1$s，%2$d 步。</string>
+    <string name="result_title">装满了！%1$s，%2$s。</string>
     <string name="result_soma">已找到 %1$d / 240 种装法</string>
     <string name="result_soma_new">这是一种新装法！</string>
     <string name="result_best">最好 %1$s</string>
@@ -106,4 +106,8 @@
     <string name="box_blocks">%1$d 块</string>
     <string name="box_current">正在装</string>
     <string name="boxes_note">点一只盒子换过去；装了一半会先问你。</string>
+    <plurals name="moves">
+        <item quantity="one">%d 步</item>
+        <item quantity="other">%d 步</item>
+    </plurals>
 </resources>

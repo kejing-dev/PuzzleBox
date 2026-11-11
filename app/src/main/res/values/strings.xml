@@ -44,7 +44,7 @@
     <string name="status_blocked">Something\'s on top. Take that one first.</string>
     <string name="status_restored">Back to the %1$s.</string>
     <string name="status_turn_here">Turn it here.</string>
-    <string name="readout">Placed %1$d/%2$d · %3$s · %4$d moves · Best %5$s</string>
+    <string name="readout">Placed %1$d/%2$d · %3$s · %4$s · Best %5$s</string>
     <string name="best_none">—</string>
     <string name="plate_line">%1$s · %2$d / %3$d · %4$s</string>
     <string name="plate_line_short">%1$s · %2$d / %3$d</string>
@@ -56,7 +56,7 @@
     <string name="plate_too_big">Too big this way</string>
     <string name="plate_hole">Gap underneath</string>
     <string name="plate_blocked">Something\'s on top</string>
-    <string name="result_title">Full! %1$s, %2$d moves.</string>
+    <string name="result_title">Full! %1$s, %2$s.</string>
     <string name="result_soma">%1$d of 240 ways found</string>
     <string name="result_soma_new">That\'s a new way!</string>
     <string name="result_best">Best %1$s</string>
@@ -106,4 +106,8 @@
     <string name="box_blocks">%1$d blocks</string>
     <string name="box_current">Playing</string>
     <string name="boxes_note">Tap a box to switch. If you\'re halfway, you\'ll be asked first.</string>
+    <plurals name="moves">
+        <item quantity="one">%d move</item>
+        <item quantity="other">%d moves</item>
+    </plurals>
 </resources>

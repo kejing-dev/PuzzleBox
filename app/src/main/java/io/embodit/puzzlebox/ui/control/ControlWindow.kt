@@ -145,6 +145,9 @@ private fun Header(title: String, tag: String, sub: String? = null) {
 }
 
 @Composable
+internal fun moves(n: Int): String = LocalContext.current.resources.getQuantityString(R.plurals.moves, n, n)
+
+@Composable
 internal fun isZh(): Boolean = stringResource(R.string.lang_code) == "zh"
 
 @Composable
@@ -202,7 +205,7 @@ private fun PlayPage(st: PlayState, settings: Settings, records: Records, graph:
         Box(Modifier.fillMaxWidth().height(100.dp).clip(RoundedCornerShape(24.dp)).background(PuzzleColors.TagFace).padding(horizontal = 20.dp), contentAlignment = Alignment.CenterStart) {
             Txt(statusText(st), "play/status", style = PicoTheme.typography.titleMedium, color = PuzzleColors.Ink, maxLines = 3)
         }
-        Txt(stringResource(R.string.readout, st.placed, st.pieces.size, clock(st.elapsed(now)), st.moves, best), "play/readout",
+        Txt(stringResource(R.string.readout, st.placed, st.pieces.size, clock(st.elapsed(now)), moves(st.moves), best), "play/readout",
             style = PicoTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), maxLines = 1)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SecondaryButton(stringResource(R.string.btn_undo), "play/undo", onClick = { flow.undo() }, enabled = st.canUndo && !busy, icon = R.drawable.ic_undo,
@@ -246,7 +249,7 @@ private fun ResultPage(st: PlayState, settings: Settings, graph: Graph) {
         }
         Column(Modifier.fillMaxWidth().weight(1f).padding(vertical = 10.dp).clip(RoundedCornerShape(28.dp)).background(PuzzleColors.TagFace).padding(horizontal = 22.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.SpaceEvenly) {
-            Txt(stringResource(R.string.result_title, clock(r.ms), r.moves), "result/title", style = PicoTheme.typography.titleLarge.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold), color = PuzzleColors.Ink, maxLines = 2)
+            Txt(stringResource(R.string.result_title, clock(r.ms), moves(r.moves)), "result/title", style = PicoTheme.typography.titleLarge.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold), color = PuzzleColors.Ink, maxLines = 2)
             if (r.somaFound != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Txt(stringResource(R.string.result_soma, r.somaFound), "result/soma", style = PicoTheme.typography.titleMedium, color = PuzzleColors.Ink)
