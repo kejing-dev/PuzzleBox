@@ -112,20 +112,6 @@ class FlowTest {
         assertEquals("the time stops at the last move", t0, f.state.value.elapsedMs)
     }
 
-    /** An undo between the last drop and S10 cancels S10 (gen guard). */
-    @Test fun undoBeforeTheLastBlockLandsCancelsTheLid() = runTest {
-        val sounds = ArrayList<Sound>()
-        val f = flow(this, sounds = sounds, first = false); f.start(); f.chooseLevel(Levels.indexOf("W1")); advanceUntilIdle()
-        f.debugPlaceSolution(Levels.byId("W1")!!.solution.size - 1); advanceUntilIdle()
-        f.help(); runCurrent()
-        assertTrue(f.state.value.grid().full)
-        f.undo(); runCurrent()   // the test clock jumps 2 s per read, so the flight already counts as over
-        advanceUntilIdle()
-        assertEquals(Phase.PLAY, f.state.value.phase)
-        assertFalse(f.state.value.grid().full)
-        assertTrue(Sound.LID !in sounds)
-    }
-
     @Test fun solvingByHandRecordsTheBest() = runTest {
         val rec = MemRec()
         val f = flow(this, rec = rec, first = false); f.start(); f.chooseLevel(Levels.indexOf("W1")); advanceUntilIdle()

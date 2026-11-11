@@ -1,7 +1,7 @@
 # 谜盒 PuzzleBox: project guidance
 
 A tilted clear puzzle box and a tray of lacquered blocks on the desk, PICO OS 6 Shared Space (Spatial SDK BOM 6.1.9),
-package `io.embodit.puzzlebox`, v0.1.1 (QA #1 q1-1 rework + K1 / K2 / K4 / K6). Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
+package `io.embodit.puzzlebox`, v0.1.2 (QA #2 q2-1 TabBar word colour + K7). Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
 (A12: one main loop; `v2[]` not built: no endless boxes, no own boxes, no odd shapes, no shelf, no free placement).
 Skeleton from the factory's klotski-box project (CloudAir lineage: two containers, theme, sound pool, board-input
 template); rules / solver / scene / pages are new.
@@ -39,7 +39,7 @@ dragMove / dragEnd`); a tap on a pad = the controller shortcut.
 ## Build / test (kj-mbp-m5)
 ```bash
 export JAVA_HOME=~/.pico/primer-cli/jdk/jdk-21.0.13+9/Contents/Home
-./gradlew assembleDebug :app:testDebugUnitTest      # 44 JVM tests: rules, 15 solutions, solver, flow, layout / D35, hit replay
+./gradlew assembleDebug :app:testDebugUnitTest      # 43 JVM tests: rules, 15 solutions, solver, flow, layout / D35, hit replay
 python3 tools/build_models.py ; python3 tools/import_cc0_sounds.py ; python3 tools/build_icon.py --icon512 icon.png
 DEV=emulator-5560 tools/pb.sh install
 ```

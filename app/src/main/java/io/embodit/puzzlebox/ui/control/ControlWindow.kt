@@ -50,7 +50,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pico.spatial.ui.design.CircularProgressIndicator
+import androidx.compose.ui.graphics.toArgb
 import com.pico.spatial.ui.design.Icon
+import com.pico.spatial.ui.design.LocalContentColor
 import com.pico.spatial.ui.design.PicoTheme
 import com.pico.spatial.ui.design.windows.TabBar
 import com.pico.spatial.ui.platform.ViewPoint
@@ -528,7 +530,10 @@ private fun NativeTabs(tabs: List<Triple<Page, Int, String>>) {
                 mainContent = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
-                        Txt(label, "tabbar/${page.name}", style = PicoTheme.typography.labelSmall, maxLines = 1)
+                        // QA q2-1: the word follows the item's content colour like the icon does (white on the selected capsule)
+                        val fg = LocalContentColor.current
+                        LaunchedEffect(fg) { Log.i(TAG, "TABCOLOR ${page.name} selected=${Ui.page == page} fg=#%08X".format(fg.toArgb())) }
+                        Txt(label, "tabbar/${page.name}", style = PicoTheme.typography.labelSmall, color = fg, maxLines = 1)
                     }
                 },
             )

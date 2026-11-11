@@ -610,7 +610,8 @@ class GameFlow(
     /**
      * M17 / QA K2: the box is full, but the last block is still flying / falling / bouncing for [ms]. The clock stops now
      * (the time is the time of the last move); S10 (lid, spin, result card) starts only after the drop animation has
-     * played out. An undo in between bumps [gen] and cancels it.
+     * played out. [悔一步] stays grey while the block is in the air (busy), so there is no undo in this window
+     * (QA K7, deviation): the lid simply follows the landing. The guard below only covers a restart / box switch.
      */
     private fun solveWhenLanded(ms: Long) {
         val endedAt = now()
