@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PuzzleBox launcher foreground (tools/build_icon.py draws the same artwork for the PICO layered icon). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FF4D7CC7" android:pathData="M54.00,43.00L68.00,51.50L54.00,60.00L40.00,51.50Z" />
+    <path android:fillColor="#FF3C609B" android:pathData="M68.00,68.50L68.00,51.50L54.00,60.00L54.00,77.00Z" />
+    <path android:fillColor="#FF2F4C7B" android:pathData="M40.00,68.50L54.00,77.00L54.00,60.00L40.00,51.50Z" />
+    <path android:fillColor="#FF4D7CC7" android:pathData="M68.00,51.50L82.00,60.00L68.00,68.50L54.00,60.00Z" />
+    <path android:fillColor="#FF3C609B" android:pathData="M82.00,77.00L82.00,60.00L68.00,68.50L68.00,85.50Z" />
+    <path android:fillColor="#FF2F4C7B" android:pathData="M54.00,77.00L68.00,85.50L68.00,68.50L54.00,60.00Z" />
+    <path android:fillColor="#FF8AB17D" android:pathData="M40.00,51.50L54.00,60.00L40.00,68.50L26.00,60.00Z" />
+    <path android:fillColor="#FF6B8A61" android:pathData="M54.00,77.00L54.00,60.00L40.00,68.50L40.00,85.50Z" />
+    <path android:fillColor="#FF556D4D" android:pathData="M26.00,77.00L40.00,85.50L40.00,68.50L26.00,60.00Z" />
+    <path android:fillColor="#FF8AB17D" android:pathData="M54.00,60.00L68.00,68.50L54.00,77.00L40.00,68.50Z" />
+    <path android:fillColor="#FF6B8A61" android:pathData="M68.00,85.50L68.00,68.50L54.00,77.00L54.00,94.00Z" />
+    <path android:fillColor="#FF556D4D" android:pathData="M40.00,85.50L54.00,94.00L54.00,77.00L40.00,68.50Z" />
+    <path android:fillColor="#FF4D7CC7" android:pathData="M54.00,26.00L68.00,34.50L54.00,43.00L40.00,34.50Z" />
+    <path android:fillColor="#FF3C609B" android:pathData="M68.00,51.50L68.00,34.50L54.00,43.00L54.00,60.00Z" />
+    <path android:fillColor="#FF2F4C7B" android:pathData="M40.00,51.50L54.00,60.00L54.00,43.00L40.00,34.50Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M81.22,75.72L53.22,92.72L54.78,95.28L82.78,78.28ZM54.78,92.72L26.78,75.72L25.22,78.28L53.22,95.28ZM53.22,27.28L81.22,44.28L82.78,41.72L54.78,24.72ZM81.22,41.72L53.22,58.72L54.78,61.28L82.78,44.28ZM54.78,58.72L26.78,41.72L25.22,44.28L53.22,61.28ZM26.78,44.28L54.78,27.28L53.22,24.72L25.22,41.72ZM83.50,77.00L83.50,43.00L80.50,43.00L80.50,77.00ZM55.50,94.00L55.50,60.00L52.50,60.00L52.50,94.00ZM27.50,77.00L27.50,43.00L24.50,43.00L24.50,77.00Z" />
+    <path android:fillColor="#FFD1495B" android:pathData="M40.00,11.55L54.00,20.05L40.00,28.55L26.00,20.05Z" />
+    <path android:fillColor="#FFA33846" android:pathData="M54.00,37.05L54.00,20.05L40.00,28.55L40.00,45.55Z" />
+    <path android:fillColor="#FF812D38" android:pathData="M26.00,37.05L40.00,45.55L40.00,28.55L26.00,20.05Z" />
+    <path android:fillColor="#FFD1495B" android:pathData="M68.00,11.55L82.00,20.05L68.00,28.55L54.00,20.05Z" />
+    <path android:fillColor="#FFA33846" android:pathData="M82.00,37.05L82.00,20.05L68.00,28.55L68.00,45.55Z" />
+    <path android:fillColor="#FF812D38" android:pathData="M54.00,37.05L68.00,45.55L68.00,28.55L54.00,20.05Z" />
+    <path android:fillColor="#FFD1495B" android:pathData="M54.00,20.05L68.00,28.55L54.00,37.05L40.00,28.55Z" />
+    <path android:fillColor="#FFA33846" android:pathData="M68.00,45.55L68.00,28.55L54.00,37.05L54.00,54.05Z" />
+    <path android:fillColor="#FF812D38" android:pathData="M40.00,45.55L54.00,54.05L54.00,37.05L40.00,28.55Z" />
+</vector>
