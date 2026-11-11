@@ -160,27 +160,66 @@ object Layout {
         return blockPose(type, type.flatRot, V3(slot.x0 + U / 2, TRAY_TOP + U / 2 + 0.0005f, zc - slot.d / 2 + U / 2))
     }
 
-    // ------------------------------------------------------------------ name plate, lid
+    // ------------------------------------------------------------------ name plate (q1-1: left of the box on a walnut sign stand), lid
 
-    const val PLATE_W = 0.16f
-    const val PLATE_H = 0.04f
-    val PLATE_C = V3(0f, -0.17f, -0.066f)
-    val PLATE_Q = Q4.axis(V3(1f, 0f, 0f), (-10 * PI / 180).toFloat())
+    /**
+     * Design spatialLayout.standPlate (q1-1, v0.1.1): a 0.18 x 0.07 m brass plate on a small walnut stand left of the box,
+     * mirroring the turn stand, centre (-0.235, -0.050, -0.040), leaning back 15° (top edge away from the user). Always two
+     * lines. In S15 it takes a 0.18 x 0.11 collider with the same centre and lean (2 cm more above and below).
+     */
+    const val PLATE_W = 0.18f
+    const val PLATE_H = 0.07f
+    val PLATE_C = V3(-0.235f, -0.050f, -0.040f)
+    const val PLATE_LEAN_DEG = 15f
+    /** About +X by -15°: the plate's up leans toward -Z (away from the user). */
+    val PLATE_Q = Q4.axis(V3(1f, 0f, 0f), (-PLATE_LEAN_DEG * PI / 180).toFloat())
     const val PLATE_PX_W = 1024
-    const val PLATE_PX_H = 256
+    const val PLATE_PX_H = 400
+    /** S15 collider (design standPlate: 0.18 x 0.11, same centre and lean), 12 mm thick. */
+    const val PLATE_HIT_W = 0.18f
+    const val PLATE_HIT_H = 0.11f
+    const val PLATE_HIT_T = 0.012f
 
-    fun plateCorners(): List<V3> = listOf(-1f, 1f).flatMap { sx -> listOf(-1f, 1f).map { sy -> PLATE_C + PLATE_Q.rotate(V3(sx * PLATE_W / 2, sy * PLATE_H / 2, 0f)) } }
+    private fun plateAt(sx: Float, sy: Float, w: Float, h: Float) = PLATE_C + PLATE_Q.rotate(V3(sx * w / 2, sy * h / 2, 0f))
+
+    fun plateCorners(): List<V3> = listOf(-1f, 1f).flatMap { sx -> listOf(-1f, 1f).map { sy -> plateAt(sx, sy, PLATE_W, PLATE_H) } }
+
+    /** 5 x 3 sample points over the plate face (design occlusionCheck.standPlate). */
+    fun plateSamples(): List<V3> = (0..4).flatMap { i -> (0..2).map { j -> plateAt(-1f + i * 0.5f, -1f + j * 1f, PLATE_W, PLATE_H) } }
+
+    /** S15 collider: 4 corners + the centre. */
+    fun plateHitPoints(): List<V3> = listOf(-1f, 1f).flatMap { sx -> listOf(-1f, 1f).map { sy -> plateAt(sx, sy, PLATE_HIT_W, PLATE_HIT_H) } } + PLATE_C
+
+    /** The sign stand under the plate (tools/build_models.py signstand.glb): base on the floor, x -0.325..-0.145, z -0.070..-0.020. */
+    val SIGN_BASE = Aabb(V3(-0.325f, FLOOR, -0.070f), V3(-0.145f, FLOOR + 0.012f, -0.020f))
+
+    /** Ray (eye -> through) against the plate's S15 collider (an oriented box): distance along the unit ray, or null. */
+    fun rayPlate(eye: V3, dir: V3): Float? {
+        val inv = PLATE_Q.conj()
+        val o = inv.rotate(eye - PLATE_C)
+        val d = inv.rotate(dir)
+        return rayAabb(o, d, Aabb(V3(-PLATE_HIT_W / 2, -PLATE_HIT_H / 2, -PLATE_HIT_T / 2), V3(PLATE_HIT_W / 2, PLATE_HIT_H / 2, PLATE_HIT_T / 2)))
+    }
 
     const val LID_T = 0.008f
     const val LID_DROP = 0.15f
 
     // ------------------------------------------------------------------ eyes (design occlusionCheck.eyePositions)
 
-    val EYES: Map<String, V3> = linkedMapOf(
+    /**
+     * The nine eyes (design occlusionCheck.eyePositions, q1-1): the system default placement (0, +0.06, +1.75) and its
+     * left / right 30° about the volume's vertical axis come first (QA #1 log, the most common view), then seated /
+     * standing and their 30° yaws.
+     */
+    val DEFAULT_EYES: Map<String, V3> = linkedMapOf(
+        "默认" to V3(0f, 0.06f, 1.75f), "默认左30" to V3(-0.875f, 0.06f, 1.516f), "默认右30" to V3(0.875f, 0.06f, 1.516f),
+    )
+    val EYES: Map<String, V3> = DEFAULT_EYES + linkedMapOf(
         "坐" to V3(0f, 0.29f, 0.95f), "站" to V3(0f, 0.69f, 0.95f),
         "坐左30" to V3(-0.48f, 0.29f, 0.82f), "坐右30" to V3(0.48f, 0.29f, 0.82f),
         "站左30" to V3(-0.48f, 0.69f, 0.82f), "站右30" to V3(0.48f, 0.69f, 0.82f),
     )
+    val DEFAULT_EYE = DEFAULT_EYES.getValue("默认")
     val SEATED = EYES.getValue("坐")
 
     // ------------------------------------------------------------------ geometry helpers (tests + scene)
@@ -215,6 +254,28 @@ object Layout {
             if (t0 > t1) return false
         }
         return true
+    }
+
+    /** Ray (origin [o], direction [d]) against an axis-aligned box: entry distance in units of |d| (0 if inside), or null. */
+    fun rayAabb(o: V3, d: V3, box: Aabb): Float? {
+        var t0 = 0f; var t1 = Float.MAX_VALUE
+        val ax = floatArrayOf(o.x, o.y, o.z); val dx = floatArrayOf(d.x, d.y, d.z)
+        val mn = floatArrayOf(box.min.x, box.min.y, box.min.z); val mx = floatArrayOf(box.max.x, box.max.y, box.max.z)
+        for (i in 0..2) {
+            if (kotlin.math.abs(dx[i]) < 1e-9f) { if (ax[i] < mn[i] || ax[i] > mx[i]) return null; continue }
+            var ta = (mn[i] - ax[i]) / dx[i]; var tb = (mx[i] - ax[i]) / dx[i]
+            if (ta > tb) { val t = ta; ta = tb; tb = t }
+            t0 = max(t0, ta); t1 = min(t1, tb)
+            if (t0 > t1) return null
+        }
+        return t0
+    }
+
+    /** Segment a-b against the tilted box (outer box incl. walls + lid travel not included), tested in the box frame. */
+    fun segmentHitsBox(a: V3, b: V3, d: Dims, pose: Pose = BOX): Boolean {
+        val inv = pose.q.conj()
+        val (mn, mx) = boxOuterLocal(d)
+        return segmentHits(inv.rotate(a - pose.p), inv.rotate(b - pose.p), Aabb(mn, mx))
     }
 
     /** Angular size (degrees) of a [w] x [h] target centred at [c] seen from [eye] (small-angle). */

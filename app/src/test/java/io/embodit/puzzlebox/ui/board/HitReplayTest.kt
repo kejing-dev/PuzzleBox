@@ -59,6 +59,27 @@ class HitReplayTest {
         assertEquals("-", BoardTargets.squareOf(resolvePath(listOf("boxModel"), BoardTargets::targetOf), st))
     }
 
+    /**
+     * q1-1 (design occlusionCheck.standPlate, HitReplayTest 加一条): in S15 the ray from each system-default eye to the
+     * plate centre first meets the plate collider; that hit (as the system reports it: the plate node under the root)
+     * resolves to "plate", logs square=plate, and routes to "reopen the panel", not into the game.
+     */
+    @Test fun plateFirstHitFromTheDefaultViewReopensThePanel() = runTest {
+        val geo = io.embodit.puzzlebox.domain.PlateViewTest()
+        for (lv in Levels.ALL) for ((name, eye) in io.embodit.puzzlebox.domain.Layout.DEFAULT_EYES) {
+            val first = geo.firstHit(lv, eye, io.embodit.puzzlebox.domain.Layout.PLATE_C - eye)
+            assertEquals("${lv.id} $name", BoardNames.PLATE, first)
+        }
+        val target = BoardTargets.resolvePath(parseLoggedPath("plate < root"))
+        assertEquals("plate", target)
+        assertEquals(BoardNames.PlateHit, BoardNames.hitOf(target))
+        val f = FlowTest.flow(this, first = false); f.start(); advanceUntilIdle()
+        assertEquals("plate", BoardTargets.squareOf(target, f.state.value))
+        val before = f.state.value
+        routeFlow(f, target); advanceUntilIdle()
+        assertEquals("the plate never changes the game", before.pieces, f.state.value.pieces)
+    }
+
     /** Real paths from a headset input-log go here after the first device round (none yet: headset not connected). */
     @Test fun replayHeadsetLogPaths() {
         val logged = listOf("pc:3 < root", "mk:pad:1:2:0 < pad:1:2 < boxRoot < root", "tab:pitch < root")

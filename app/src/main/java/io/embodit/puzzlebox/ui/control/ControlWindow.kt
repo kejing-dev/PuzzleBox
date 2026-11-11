@@ -96,8 +96,14 @@ fun ControlWindow() {
         owner.lifecycle.addObserver(obs)
         onDispose { owner.lifecycle.removeObserver(obs) }
     }
-    // S01: the rules page opens first; [开始装] (or the first touch on a block) ends it
-    LaunchedEffect(state.welcome) { if (state.welcome) Ui.page = Page.RULES else if (Ui.page == Page.RULES && state.coach) Ui.page = Page.PLAY }
+    val sceneReady by graph.sceneReady.collectAsStateWithLifecycle()
+    // S01: the rules page opens first, once the scene is built (S00 shows the play page's loading line first, QA K4);
+    // [开始装] (or the first touch on a block) ends it
+    LaunchedEffect(state.welcome, sceneReady) {
+        if (state.welcome && sceneReady) Ui.page = Page.RULES
+        else if (state.welcome) Ui.page = Page.PLAY
+        else if (Ui.page == Page.RULES && state.coach) Ui.page = Page.PLAY
+    }
     LaunchedEffect(state.phase) { if (state.phase == Phase.SOLVED) Ui.page = Page.PLAY }
     LaunchedEffect(state.confirm) { if (state.confirm is Confirm.Restart) Ui.page = Page.PLAY }
     LaunchedEffect(Ui.page) {
@@ -110,7 +116,7 @@ fun ControlWindow() {
 
     Box(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 20.dp)) {
         when (Ui.page) {
-            Page.PLAY -> PlayPage(state, settings, records, graph, now)
+            Page.PLAY -> PlayPage(state, settings, records, graph, now, sceneReady)
             Page.BOXES -> BoxesPage(state, records, graph)
             Page.RULES -> RulesPage(state, graph)
             Page.SETTINGS -> SettingsPage(settings, graph)
@@ -179,9 +185,9 @@ internal fun statusText(st: PlayState): String = when {
 // ------------------------------------------------------------------ Play
 
 @Composable
-private fun PlayPage(st: PlayState, settings: Settings, records: Records, graph: Graph, now: Long) {
+private fun PlayPage(st: PlayState, settings: Settings, records: Records, graph: Graph, now: Long, sceneReady: Boolean) {
     val flow = graph.flow
-    if (st.phase == Phase.LOADING || st.pieces.isEmpty()) {
+    if (st.phase == Phase.LOADING || st.pieces.isEmpty() || !sceneReady) {
         PageColumn {
             Header(stringResource(R.string.app_name), "play")
             Column(Modifier.fillMaxWidth().weight(1f), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -517,8 +523,14 @@ private fun NativeTabs(tabs: List<Triple<Page, Int, String>>) {
             item(
                 selected = Ui.page == page,
                 onClick = { Ui.page = page },
-                mainContent = { Icon(painter = painterResource(icon), contentDescription = label) },
-                supportContent = { Txt(label, "tabbar/${page.name}", style = PicoTheme.typography.labelMedium) },
+                // QA K6 / B19: the capsule only draws mainContent (supportContent never shows, pico-cli-feedback), so the
+                // word goes under the icon inside mainContent
+                mainContent = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+                        Txt(label, "tabbar/${page.name}", style = PicoTheme.typography.labelSmall, maxLines = 1)
+                    }
+                },
             )
         }
     }

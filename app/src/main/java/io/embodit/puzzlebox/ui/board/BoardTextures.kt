@@ -81,37 +81,56 @@ object BoardTextures {
         return bmp
     }
 
+    /**
+     * Hint ghost face (M16): a bright 12 px white edge and a faint centre (alpha 0.3), tinted by the block colour, so the
+     * ghost reads as an outline of where the block goes, not as a block (QA K1).
+     */
+    fun ghostEdge(): Bitmap {
+        val n = 128
+        val bmp = Bitmap.createBitmap(n, n, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        c.drawColor(Color.argb(77, 255, 255, 255))
+        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 12f }
+        c.drawRect(6f, 6f, n - 6f, n - 6f, p)
+        return bmp
+    }
+
+    /** Red-brown for the 2.5 s reason and the S15 "tap here" (design standPlate). */
+    val PLATE_ACCENT = Color.rgb(0x5E, 0x18, 0x0A)  // 5.44:1 on the brass face (ui-audit contrast table)
+
     /** Text width (px) of a plate line at its full size. */
     fun plateWidth(text: String, second: Boolean): Float = platePaint(second).measureText(text)
 
     private fun platePaint(second: Boolean) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = PLATE_INK; textAlign = Paint.Align.CENTER; typeface = font(!second)
-        textSize = if (second) 72f else 84f
+        color = PLATE_INK; textAlign = Paint.Align.CENTER; typeface = font(true)
+        // design standPlate: 1024 x 400 px for 0.18 x 0.07 m; line 1 86 px (1.5 cm em), line 2 76 px (1.3 cm em)
+        textSize = if (second) 76f else 86f
     }
 
     /**
-     * The brass name plate (design spatialLayout.standPlate), 1024 x 256 px for 0.16 x 0.04 m: one line, or the first line
-     * smaller with a second line (the 2.5 s reason / the S15 "tap here"). Lines wider than 960 px log OVERFLOW and shrink.
+     * The brass name plate (design spatialLayout.standPlate, q1-1), 1024 x 400 px for 0.18 x 0.07 m, always two lines:
+     * "鞋盒 · 3 / 6" over "1:12" (full: "鞋盒" over "1:42"); the second line turns red-brown for the 2.5 s reason and the
+     * S15 "tap here". A line wider than 960 px logs OVERFLOW and shrinks (never cut).
      */
-    fun plate(line1: String, line2: String?): Bitmap {
+    fun plate(line1: String, line2: String, accent: Boolean): Bitmap {
         val bmp = Bitmap.createBitmap(Layout.PLATE_PX_W, Layout.PLATE_PX_H, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
         val r = RectF(0f, 0f, Layout.PLATE_PX_W.toFloat(), Layout.PLATE_PX_H.toFloat())
         val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = PLATE_EDGE }
         c.drawRect(r, bg)
         bg.color = PLATE_FACE
-        c.drawRoundRect(RectF(10f, 10f, r.right - 10f, r.bottom - 10f), 20f, 20f, bg)
-        fun line(text: String, second: Boolean, cy: Float, scale: Float) {
+        c.drawRoundRect(RectF(14f, 14f, r.right - 14f, r.bottom - 14f), 28f, 28f, bg)
+        fun line(text: String, second: Boolean, cy: Float) {
             val p = platePaint(second)
-            p.textSize *= scale
+            if (second && accent) { p.color = PLATE_ACCENT; p.typeface = font(true) }
             val w = p.measureText(text)
             val max = Layout.PLATE_PX_W - 64f
             if (w > max) { Log.w(TAG, "OVERFLOW plate/${if (second) "line2" else "line1"} \"$text\" ${w.toInt()} px > ${max.toInt()}"); p.textSize *= max / w }
             val fm = p.fontMetrics
             c.drawText(text, r.centerX(), cy - (fm.ascent + fm.descent) / 2, p)
         }
-        if (line2.isNullOrEmpty()) line(line1, false, r.centerY(), 1f)
-        else { line(line1, false, r.height() * 0.30f, 0.72f); line(line2, true, r.height() * 0.70f, 1f) }
+        line(line1, false, r.height() * 0.32f)
+        line(line2, true, r.height() * 0.70f)
         return bmp
     }
 

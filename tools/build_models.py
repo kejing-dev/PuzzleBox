@@ -10,6 +10,8 @@ Writes app/src/main/assets/models/ (numbers = domain/Layout.kt, design spatialLa
   wedge.glb         walnut wedge under the box (top = the 30° box underside), volume coordinates
   tray.glb          maple tray 0.62 x 0.24 x 0.015 with a 6 mm rim, volume coordinates
   stand.glb         walnut turn stand (Ø 16 cm, top y -0.12, 32 segments) + the tab bracket, volume coordinates
+  signstand.glb     walnut sign stand left of the box (q1-1): base 0.18 x 0.05 x 0.012 on the floor, a backing board behind
+                    the brass plate (leaning back 15°) and a square post under it, volume coordinates
   tab.glb           a maple tab 6 x 4 x 1 cm (the icon + word face is a texture in the app), origin = centre
 All materials OPAQUE (D24). Texture convention: image up = +Y / far, image right = +X.
 """
@@ -194,6 +196,42 @@ def build_stand():
     m.write("stand", [mat("StandTop", tex=0, rough=0.6), mat("StandSide", tex=1, rough=0.6)], [top, wood(WALNUT, 512, 128, seed=41, along_x=True)])
 
 
+def tilted_box(m, mi, centre, half, lean, uvf=None):
+    """A box of half sizes [half] centred on [centre], turned about +X by -lean (its top leans away from the user, -Z)."""
+    sub = Mesh()
+    box(sub, 0, -half[0], half[0], -half[1], half[1], -half[2], half[2], uvf=uvf)
+    c, s_ = math.cos(-lean), math.sin(-lean)
+    rot = lambda v: (v[0], v[1] * c - v[2] * s_, v[1] * s_ + v[2] * c)
+    base = len(m.pos)
+    for p_, n_, t_ in zip(sub.pos, sub.nor, sub.uv):
+        r = rot(p_)
+        m.pos.append((r[0] + centre[0], r[1] + centre[1], r[2] + centre[2])); m.nor.append(rot(n_)); m.uv.append(t_)
+    for _, idx in sub.prims.items():
+        m.prims.setdefault(mi, []).extend(base + i for i in idx)
+
+
+def build_signstand():
+    """design spatialLayout.standPlate (q1-1): plate centre (-0.235, -0.050, -0.040), 0.18 x 0.07, leaning back 15°."""
+    cx, cy, cz, lean = -0.235, -0.050, -0.040, math.radians(15)
+    F = -0.20
+    m = Mesh()
+    uv = lambda x, z: ((x + 0.325) / 0.18, (z + 0.07) / 0.05)
+    # base board on the floor
+    box(m, 0, -0.325, -0.145, F, F + 0.012, -0.070, -0.020, uvf=uv)
+    # backing board right behind the plate face (local z -0.008 .. -0.002), 4 mm larger all round
+    up = (0.0, math.cos(lean), -math.sin(lean)); nrm = (0.0, math.sin(lean), math.cos(lean))
+    bc = (cx, cy - 0.005 * nrm[1], cz - 0.005 * nrm[2])
+    tilted_box(m, 1, bc, (0.094, 0.039, 0.003), lean, uvf=lambda x, z: (0.5 + x / 0.2, 0.5))
+    # square post (12 mm) from the base up to the back of the board, slightly slanted
+    top = (cx, cy - 0.010 * up[1] - 0.008 * nrm[1], cz - 0.010 * up[2] - 0.008 * nrm[2])
+    bot = (cx, F + 0.012, -0.056)
+    ln = math.hypot(top[1] - bot[1], top[2] - bot[2])
+    slant = math.atan2(-(top[2] - bot[2]), top[1] - bot[1])
+    tilted_box(m, 1, (cx, (top[1] + bot[1]) / 2, (top[2] + bot[2]) / 2), (0.006, ln / 2, 0.006), slant, uvf=lambda x, z: (0.5, 0.5))
+    m.write("signstand", [mat("SignBase", tex=0, rough=0.62), mat("SignBack", tex=1, rough=0.6)],
+            [wood(WALNUT, 512, 160, seed=61, along_x=True, contrast=0.8), wood(WALNUT_DARK, 512, 128, seed=62, along_x=True, contrast=0.8)])
+
+
 def build_tab():
     m = Mesh()
     w, h, t = 0.06, 0.04, 0.01
@@ -217,4 +255,4 @@ if __name__ == "__main__":
         build_box(*d)
     for (x, z) in sorted({(d[0], d[2]) for d in DIMS}):
         build_lid(x, z)
-    build_wedge(); build_tray(); build_stand(); build_tab()
+    build_wedge(); build_tray(); build_stand(); build_signstand(); build_tab()

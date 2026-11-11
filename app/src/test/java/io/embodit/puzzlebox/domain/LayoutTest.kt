@@ -27,12 +27,18 @@ class LayoutTest {
         }
     }
 
-    @Test fun trayBlocksDoNotHideTheBoxFrontOrThePlate() {
+    /**
+     * occlusionCheck.trayVsBox (q1-1): from the six seated / standing eyes no tray block covers any front-wall cell centre;
+     * every front-wall cell centre is seen from at least one of the three default eyes (almost level, the front tray
+     * row may cover the lowest row's lower edge). The plate has its own test (PlateViewTest).
+     */
+    @Test fun trayBlocksDoNotHideTheBoxFront() {
         for (lv in Levels.ALL) {
             val boxes = trayBoxes(lv)
             val d = lv.dims
-            val targets = (0 until d.x).flatMap { x -> (0 until d.y).map { y -> Layout.boxToWorld(Layout.cellLocal(d, Cell(x, y, d.z - 1)) + V3(0f, 0f, Layout.U / 2)) } } + Layout.plateCorners()
-            for ((name, eye) in Layout.EYES) for (t in targets) for (b in boxes) assertFalse("${lv.id} $name $t", Layout.segmentHits(eye, t, b))
+            val targets = (0 until d.x).flatMap { x -> (0 until d.y).map { y -> Layout.boxToWorld(Layout.cellLocal(d, Cell(x, y, d.z - 1)) + V3(0f, 0f, Layout.U / 2)) } }
+            for ((name, eye) in Layout.EYES) if (name !in Layout.DEFAULT_EYES) for (t in targets) for (b in boxes) assertFalse("${lv.id} $name $t", Layout.segmentHits(eye, t, b))
+            for (t in targets) assertTrue("${lv.id} $t", Layout.DEFAULT_EYES.values.any { eye -> boxes.none { Layout.segmentHits(eye, t, it) } })
         }
     }
 
@@ -72,6 +78,10 @@ class LayoutTest {
                 val spin = Q4.axis(V3.UP, (2 * Math.PI * k / 12).toFloat())
                 val lifted = corners.map { Layout.BOX.apply(c + V3(0f, 0.05f, 0f) + spin.rotate(it - c)) }
                 assertTrue(lv.id, lifted.all { it.y <= Layout.TOP + 0.03f && it.y >= -0.16f && it.z >= -Layout.VOL_D / 2 })
+                // design solvedSpin (q1-1): the turning box never reaches the sign stand / plate (right edge x -0.145),
+                // nor its mirror (N8 fallback: the turn stand side is further out, x >= +0.13)
+                val plateRight = Layout.plateCorners().maxOf { it.x }
+                assertTrue("${lv.id} spin min x ${lifted.minOf { it.x }}", lifted.all { it.x > plateRight + 0.01f && it.x < -plateRight - 0.01f })
             }
         }
     }

@@ -1,7 +1,7 @@
 # 谜盒 PuzzleBox: project guidance
 
 A tilted clear puzzle box and a tray of lacquered blocks on the desk, PICO OS 6 Shared Space (Spatial SDK BOM 6.1.9),
-package `io.embodit.puzzlebox`, v0.1.0. Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
+package `io.embodit.puzzlebox`, v0.1.1 (QA #1 q1-1 rework + K1 / K2 / K4 / K6). Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
 (A12: one main loop; `v2[]` not built: no endless boxes, no own boxes, no odd shapes, no shelf, no free placement).
 Skeleton from the factory's klotski-box project (CloudAir lineage: two containers, theme, sound pool, board-input
 template); rules / solver / scene / pages are new.
@@ -9,7 +9,7 @@ template); rules / solver / scene / pages are new.
 ## Surfaces
 - **Box volume** (default container `PuzzleBoxVolume`, Volumetric 0.66 x 0.40 x 0.56 m, fixed scale, gravity aligned,
   uniform resize). Walnut wedge with the box tilted 30° toward the user about its near-bottom edge (y -0.15, z -0.07),
-  four acrylic walls, mouth overlay (grid + "还能放几格" ticks), brass name plate on the wedge front; turn stand at
+  four acrylic walls, mouth overlay (grid + "还能放几格" ticks); brass name plate (0.18 x 0.07 m, two lines, leaning back 15°) on a walnut sign stand left of the box (centre (-0.235, -0.050, -0.040), v0.1.1 q1-1); turn stand at
   (x +0.21, z -0.08) with three tabs [转] [前翻] [侧翻] on its front edge; dark walnut tray (two rows) in front.
 - **Control window** (`PuzzleBoxControl`, Planar 600 x 520 dp, `Placement.right(box)`): native SpatialUI `TabBar`, four
   pages 玩 / 盒子 / 玩法 / 设置; no page scrolls. [重开控制窗] closes and reopens beside the box; [退出应用] closes both
@@ -39,7 +39,7 @@ dragMove / dragEnd`); a tap on a pad = the controller shortcut.
 ## Build / test (kj-mbp-m5)
 ```bash
 export JAVA_HOME=~/.pico/primer-cli/jdk/jdk-21.0.13+9/Contents/Home
-./gradlew assembleDebug :app:testDebugUnitTest      # 36 JVM tests: rules, 15 solutions, solver, flow, layout / D35, hit replay
+./gradlew assembleDebug :app:testDebugUnitTest      # 44 JVM tests: rules, 15 solutions, solver, flow, layout / D35, hit replay
 python3 tools/build_models.py ; python3 tools/import_cc0_sounds.py ; python3 tools/build_icon.py --icon512 icon.png
 DEV=emulator-5560 tools/pb.sh install
 ```
@@ -75,6 +75,10 @@ Other: `tap <holder>`, `pick <i>`, `rot yaw|pitch|roll`, `back`, `drop "<x> <z>"
 - 3D drags / pinches are not reachable by `pico-cli interact` on the Mac emulator: driven by the debug broadcast through the
   same GameFlow calls; the three inputs (controller ray, hand ray, eye-hand) need the headset. Panel buttons are real
   `pico-cli interact act` clicks.
-- The emulator's default camera is almost level with the volume (~5° down): the front tray blocks cover the lower part of
-  the name plate there; from the design's seated / standing eyes nothing is covered (LayoutTest).
+- The system puts the volume 1.75 m ahead, almost level with the eye. The plate sits left of the box (v0.1.1) so it is seen
+  whole and hit first from the 3 default eyes and the 6 seated / standing ones (PlateViewTest, also mirrored for N8).
+- Hint ghost: bright-edged see-through cells, opacity pulsing 0.12-0.25 at 1.5 Hz (M16). The last block's fly + fall +
+  bounce plays out before S10 starts (`GameFlow.solveWhenLanded`, M17). First run: the play page's loading line until
+  the scene is built (`Graph.sceneReady`), then the rules page (K4). TabBar words sit inside `mainContent` (supportContent
+  is never drawn, K6).
 - Sounds are SoundPool (not spatial). Wood sounds are CC0 recordings (Kenney + freesound 254343); the solved chime is synthesised.

@@ -56,6 +56,8 @@ class Graph(context: Context) {
         log = { Log.i(TAG, it) },
     )
     val window = WindowCtl()
+    /** S00 -> ready: the volume's models and the current box are built (QA K4: the first-run rules page waits for it). */
+    val sceneReady = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     init {
         scope.launch {

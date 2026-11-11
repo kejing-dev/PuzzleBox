@@ -46,9 +46,7 @@
     <string name="status_turn_here">在这里转。</string>
     <string name="readout">已放 %1$d / %2$d · %3$s · %4$s · 最好 %5$s</string>
     <string name="best_none">—</string>
-    <string name="plate_line">%1$s · %2$d / %3$d · %4$s</string>
     <string name="plate_line_short">%1$s · %2$d / %3$d</string>
-    <string name="plate_full">%1$s · %2$s</string>
     <string name="plate_s15">点这里打开面板</string>
     <string name="plate_coach">先点这块</string>
     <string name="plate_turn_here">在这里转</string>

@@ -52,7 +52,7 @@ internal class Models(private val load: suspend (String) -> Entity) {
 }
 
 /** The words on the three tabs and the plate lines, already in the app language (resolved by BoardScreen). */
-internal data class SceneTexts(val tabs: Map<Turn, String>, val plate1: String, val plate2: String?, val testF: Boolean = false)
+internal data class SceneTexts(val tabs: Map<Turn, String>, val plate1: String, val plate2: String, val plate2Accent: Boolean = false, val testF: Boolean = false)
 
 /**
  * Every entity of the volume. Compose hands over [PlayState] through [apply]; everything that moves (blocks flying,
@@ -61,7 +61,7 @@ internal data class SceneTexts(val tabs: Map<Turn, String>, val plate1: String, 
  *
  * ```
  * root (volume centre)
- * ├ wedge, tray, stand (+ tab bracket), name plate "plate" (collider only in S15), key light   (static, volume coords)
+ * ├ wedge, tray, stand (+ tab bracket), sign stand + name plate "plate" left of the box (q1-1; collider only in S15), key light   (static, volume coords)
  * ├ tabs "tab:yaw|pitch|roll" (GLB holder: collider + Interactable + HoverEffect; face plane child), only while selected
  * ├ blocks "pc:<i>" (GLB clone root = holder: one cube collider per cell + Interactable + HoverEffect)
  * ├ anchor dot (on the stand block's anchor top face), tray outline (where the lifted block sat)
@@ -82,7 +82,7 @@ internal class BoardScene(private val scope: CoroutineScope) {
     private var built = false
 
     private var state = PlayState()
-    private var texts = SceneTexts(emptyMap(), "", null)
+    private var texts = SceneTexts(emptyMap(), "", "")
     private var panelOpen = true
     private var regionHalfY = -1f
 
@@ -168,7 +168,7 @@ internal class BoardScene(private val scope: CoroutineScope) {
         if (built) { r.close(); return }
         res = r; models = m
         val t0 = SystemClock.elapsedRealtime()
-        for (n in listOf("wedge", "tray", "stand")) root.addChild(clone(m.get(n)).apply { setName(n) })
+        for (n in listOf("wedge", "tray", "stand", "signstand")) root.addChild(clone(m.get(n)).apply { setName(n) })
         // three tabs on the stand's front edge, facing the user (D10: only turned about Y; they face +Z already)
         val tabTpl = m.get("tab")
         for (t in Turn.entries) {
@@ -308,18 +308,21 @@ internal class BoardScene(private val scope: CoroutineScope) {
     // ---------------------------------------------------------------- textures (async, keyed)
 
     private fun refreshPlate() {
-        val key = "${texts.plate1}\n${texts.plate2.orEmpty()}"
+        val key = "${texts.plate1}\n${texts.plate2}\n${texts.plate2Accent}"
         if (key == plateShown || plateBusy || texts.plate1.isEmpty()) return
         plateBusy = true
         val (l1, l2) = texts.plate1 to texts.plate2
+        val accent = texts.plate2Accent
         scope.launch {
-            val tex = withContext(Dispatchers.IO) { runCatching { TextureResource.create(BoardTextures.plate(l1, l2)) }.getOrNull() }
+            val tex = withContext(Dispatchers.IO) { runCatching { TextureResource.create(BoardTextures.plate(l1, l2, accent)) }.getOrNull() }
             if (tex != null) {
                 plateMat?.setBaseColorTexture(tex)
                 plateTex?.let { old -> runCatching { old.close() } }
                 plateTex = tex
                 plateShown = key
-                if (key.substringAfter("\n") != plateLine2Logged) { plateLine2Logged = key.substringAfter("\n"); Log.i(TAG, "PLATE \"${key.replace("\n", " | ")}\"") }
+                // the clock ticks every second: log only when the second line is a reason / the S15 line, or it changes kind
+                val logKey = l1 + "|" + (if (accent) l2 else "clock")
+                if (logKey != plateLine2Logged) { plateLine2Logged = logKey; Log.i(TAG, "PLATE \"$l1 | $l2\" accent=$accent") }
             }
             plateBusy = false
         }
@@ -505,6 +508,7 @@ internal class BoardScene(private val scope: CoroutineScope) {
         } else if (st.hintOn && st.phase == Phase.PLAY && !st.busy(now)) {
             st.hint?.let { h -> ghostCells = h.cells; ghostMat = r.hintMat.getValue(h.type) }
         }
+        if (ghostCells.isNotEmpty() && drag == null) (ghostMat as? UnlitMaterial)?.setOpacity(SceneResources.hintOpacity(now, st.reduced))
         for (k in ghostCubes.indices) {
             val c = ghostCubes[k]
             val cell = ghostCells.getOrNull(k)
@@ -542,7 +546,7 @@ internal class BoardScene(private val scope: CoroutineScope) {
 
     fun evidence(): String {
         val st = state
-        return "level=${st.level.id} built=$levelBuilt halfY=$regionHalfY pads=$padsOn tabs=$tabsOn plateCollider=$plateCollider plate=\"${plateShown?.replace("\n", " | ")}\" " +
+        return "level=${st.level.id} built=$levelBuilt halfY=$regionHalfY pads=$padsOn tabs=$tabsOn plateCollider=$plateCollider plate=\"${plateShown?.replace("\n", " | ")}\" plateAt=${Layout.PLATE_C} " +
             "box=${boxPose(st, SystemClock.uptimeMillis()).p} pieces=${pieces.mapIndexed { i, e -> "$i@${e.transform().position}" }}"
     }
 

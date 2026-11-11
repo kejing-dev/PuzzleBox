@@ -90,6 +90,14 @@ fun BoardScreen() {
         graph.window.open("start")
         onDispose { graph.window.detach() }
     }
+    // S00 ends when the models and the current box are built (QA K4: the first-run rules page waits for it); the scene
+    // builds the box from update {}, so this waits outside the SpatialView's initial block; never more than 12 s
+    LaunchedEffect(scene) {
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        while (!scene.ready && android.os.SystemClock.elapsedRealtime() - t0 < 12_000) delay(30)
+        graph.sceneReady.value = true
+        Log.i(TAG, "SCENE ready=${scene.ready} after ${android.os.SystemClock.elapsedRealtime() - t0} ms -> S00 done")
+    }
     // the plate's clock and its 2.5 s second line
     LaunchedEffect(Unit) { while (true) { delay(500); tick = android.os.SystemClock.uptimeMillis() } }
 
@@ -117,6 +125,7 @@ fun BoardScreen() {
         onDispose {
             unregisterSystem<BoardFrameSystem>()
             if (SceneHolder.scene === scene) SceneHolder.scene = null
+            graph.sceneReady.value = false
             scene.dispose()
         }
     }
@@ -149,6 +158,7 @@ fun BoardScreen() {
             if (prefs.getBoolean("s00hold", false)) { Log.i(TAG, "S00 hold 10 s"); delay(10_000) }
             runCatching { scene.install(resources, models) }.onFailure { Log.e(TAG, "MODELS failed", it) }
             Log.i(TAG, "MODELS ready in ${android.os.SystemClock.elapsedRealtime() - t0} ms")
+
         },
         update = { content, _ ->
             if (viewSize != IntSize.Zero) {
@@ -161,17 +171,18 @@ fun BoardScreen() {
 }
 
 /**
- * The plate lines (design spatialLayout.standPlate; D38: the same source as the panel) and the tab words, in the app
- * language. Line 1 "鞋盒 · 3 / 6 · 1:12" (full: "鞋盒 · 1:42"); line 2 = the panel-closed hint (S15) or a 2.5 s reason.
+ * The plate lines (design spatialLayout.standPlate, q1-1: always two lines; D38: the same source as the panel) and the tab
+ * words, in the app language. Line 1 "鞋盒 · 3 / 6" (full: "鞋盒"); line 2 the clock "1:12" (full: the final time), or
+ * red-brown: the panel-closed hint (S15, always) or a 2.5 s reason (content.strings.plateShort).
  */
 internal fun sceneTexts(st: PlayState, panelOpen: Boolean, now: Long, s: (Int, Array<Any>) -> String): SceneTexts {
     val tabs = mapOf(Turn.YAW to s(R.string.tab_yaw, emptyArray()), Turn.PITCH to s(R.string.tab_pitch, emptyArray()), Turn.ROLL to s(R.string.tab_roll, emptyArray()))
-    if (st.phase == Phase.LOADING || st.pieces.isEmpty()) return SceneTexts(tabs, "", null, SceneHolder.testF)
+    if (st.phase == Phase.LOADING || st.pieces.isEmpty()) return SceneTexts(tabs, "", "", testF = SceneHolder.testF)
     val name = if (s(R.string.lang_code, emptyArray()) == "zh") st.level.nameZh else st.level.nameEn
     val t = clock(if (st.phase == Phase.SOLVED) st.elapsedMs else st.elapsed(now))
-    val line1 = if (st.phase == Phase.SOLVED) s(R.string.plate_full, arrayOf(name, t)) else s(R.string.plate_line, arrayOf(name, st.placed, st.pieces.size, t))
+    val line1 = if (st.phase == Phase.SOLVED) name else s(R.string.plate_line_short, arrayOf(name, st.placed, st.pieces.size))
     val flash = st.flash?.takeIf { now - st.flashAt in 0 until FLASH_MS || st.freezeMs != null }
-    val line2 = when {
+    val reason = when {
         !panelOpen -> s(R.string.plate_s15, emptyArray())
         flash != null -> s(when (flash) {
             PlateFlash.COACH -> R.string.plate_coach
@@ -183,9 +194,7 @@ internal fun sceneTexts(st: PlayState, panelOpen: Boolean, now: Long, s: (Int, A
         }, emptyArray())
         else -> null
     }
-    // with a second line the first one is shorter: "鞋盒 · 3 / 6"
-    val l1 = if (line2 != null && st.phase != Phase.SOLVED) s(R.string.plate_line_short, arrayOf(name, st.placed, st.pieces.size)) else line1
-    return SceneTexts(tabs, l1, line2, SceneHolder.testF)
+    return SceneTexts(tabs, line1, reason ?: t, plate2Accent = reason != null, testF = SceneHolder.testF)
 }
 
 /** m:ss (or h:mm:ss past an hour). */

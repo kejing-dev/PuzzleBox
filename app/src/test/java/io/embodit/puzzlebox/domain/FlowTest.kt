@@ -3,9 +3,12 @@ package io.embodit.puzzlebox.domain
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -68,6 +71,59 @@ class FlowTest {
             if (lv.soma) assertEquals(1, rec.r.somaWays.size)
         }
         assertTrue(Sound.LID in sounds && Sound.SOLVED in sounds)
+    }
+
+    /** M17 / QA K2: with [帮我放一块] on the last block, S10 (lid) starts only after that block's fly + fall + bounce. */
+    @Test fun helpLastBlockLandsBeforeTheLid() = runTest {
+        for (id in listOf("W1", "M4", "S5")) {
+            val sounds = ArrayList<Sound>()
+            val f = flow(this, sounds = sounds, first = false); f.start(); f.chooseLevel(Levels.indexOf(id)); advanceUntilIdle()
+            f.debugPlaceSolution(Levels.byId(id)!!.solution.size - 1); advanceUntilIdle()
+            f.help(); runCurrent()
+            val st = f.state.value
+            assertEquals(id, st.pieces.size, st.placed)
+            val i = st.motions.keys.single()
+            val total = st.motions.getValue(i).totalMs
+            assertEquals("$id: still playing while the last block flies", Phase.PLAY, st.phase)
+            advanceTimeBy(total - 1); runCurrent()
+            assertEquals("$id: no lid before the block has landed ($total ms)", Phase.PLAY, f.state.value.phase)
+            assertTrue(Sound.LID !in sounds)
+            advanceUntilIdle()
+            assertEquals(id, Phase.SOLVED, f.state.value.phase)
+            assertTrue(sounds.indexOf(Sound.DROP) in 0 until sounds.indexOf(Sound.LID))
+        }
+    }
+
+    /** The same for a hand drop of the last block; the time stops at that move. */
+    @Test fun lastHandDropLandsBeforeTheLid() = runTest {
+        val f = flow(this, first = false); f.start(); f.chooseLevel(Levels.indexOf("W1")); advanceUntilIdle()
+        val sol = Levels.byId("W1")!!.solution
+        f.debugPlaceSolution(sol.size - 1); advanceUntilIdle()
+        val last = sol.last()
+        val i = f.state.value.pieces.indices.first { f.state.value.pieces[it].where == Where.TRAY }
+        f.debugSelect(i, Orient.rotFor(last.piece, last.cells)); advanceUntilIdle()
+        val a = anchorOf(last.cells)
+        f.tapPad(a.first, a.second); runCurrent()
+        assertTrue(f.state.value.grid().full)
+        assertEquals("no lid while the block falls", Phase.PLAY, f.state.value.phase)
+        val t0 = f.state.value.elapsedMs
+        advanceUntilIdle()
+        assertEquals(Phase.SOLVED, f.state.value.phase)
+        assertEquals("the time stops at the last move", t0, f.state.value.elapsedMs)
+    }
+
+    /** An undo between the last drop and S10 cancels S10 (gen guard). */
+    @Test fun undoBeforeTheLastBlockLandsCancelsTheLid() = runTest {
+        val sounds = ArrayList<Sound>()
+        val f = flow(this, sounds = sounds, first = false); f.start(); f.chooseLevel(Levels.indexOf("W1")); advanceUntilIdle()
+        f.debugPlaceSolution(Levels.byId("W1")!!.solution.size - 1); advanceUntilIdle()
+        f.help(); runCurrent()
+        assertTrue(f.state.value.grid().full)
+        f.undo(); runCurrent()   // the test clock jumps 2 s per read, so the flight already counts as over
+        advanceUntilIdle()
+        assertEquals(Phase.PLAY, f.state.value.phase)
+        assertFalse(f.state.value.grid().full)
+        assertTrue(Sound.LID !in sounds)
     }
 
     @Test fun solvingByHandRecordsTheBest() = runTest {

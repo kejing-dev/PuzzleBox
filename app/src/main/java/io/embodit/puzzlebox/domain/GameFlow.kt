@@ -334,7 +334,7 @@ class GameFlow(
                     onSound(Sound.DROP, (1.06f - 0.05f * r.fall).coerceIn(0.9f, 1.1f))
                     if (newHoles) { delay(120); onSound(Sound.HOLE, 1f) }
                 }
-                if (g2.full) solvedNow(st, t + 300 + fallMs) else refreshSolver()
+                if (g2.full) solveWhenLanded(300 + fallMs) else refreshSolver()
                 persist()
             }
             DropResult.TooBig, is DropResult.SticksOut -> {
@@ -528,7 +528,7 @@ class GameFlow(
     /** T8 / S09: the solver's next block flies to the stand, turns, and drops in (computed from the current box). */
     fun help() {
         var s = st
-        if (s.phase != Phase.PLAY || s.confirm != null || s.busy(now())) return
+        if (s.phase != Phase.PLAY || s.confirm != null || s.busy(now()) || s.grid().full) return
         val g = gen
         set(s.copy(notice = Notice.THINKING))
         val mask = s.grid().mask()
@@ -566,7 +566,7 @@ class GameFlow(
             val total = n.motions[i]!!.totalMs
             log("HELP piece $i ${p.type} -> ${pl.cells} S09")
             later(total) { onSound(Sound.DROP, 1f) }
-            if (n.grid().full) solvedNow(st, t + total) else refreshSolver()
+            if (n.grid().full) solveWhenLanded(total) else refreshSolver()
             persist()
         }
     }
@@ -606,6 +606,22 @@ class GameFlow(
     fun again() { load(st.levelIndex) }
 
     // ------------------------------------------------------------------ solved (S10)
+
+    /**
+     * M17 / QA K2: the box is full, but the last block is still flying / falling / bouncing for [ms]. The clock stops now
+     * (the time is the time of the last move); S10 (lid, spin, result card) starts only after the drop animation has
+     * played out. An undo in between bumps [gen] and cancels it.
+     */
+    private fun solveWhenLanded(ms: Long) {
+        val endedAt = now()
+        val s = st
+        set(s.copy(runningSince = null, elapsedMs = s.elapsed(endedAt)))
+        log("FULL ${s.level.id}: S10 after the last block lands ($ms ms)")
+        later(ms) {
+            val n = st
+            if (n.phase == Phase.PLAY && n.grid().full) solvedNow(n, now()) else log("FULL cancelled")
+        }
+    }
 
     private fun solvedNow(s0: PlayState, at: Long, restoring: Boolean = false) {
         val t = now()
@@ -696,7 +712,7 @@ class GameFlow(
         autoJob = scope.launch {
             while (st.phase == Phase.PLAY) {
                 while (st.busy(now()) || st.notice == Notice.THINKING) delay(50)
-                if (st.phase != Phase.PLAY) break
+                if (st.phase != Phase.PLAY || st.grid().full) break
                 val before = st.placed
                 help()
                 delay(stepMs)

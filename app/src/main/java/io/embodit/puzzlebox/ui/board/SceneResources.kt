@@ -66,6 +66,14 @@ internal class SceneResources private constructor() {
         /** Mouth pad markers (board-input template "标记尺寸"): <= 5 mm round dot, 1.2 mm proud; the pad itself is a whole cell. */
         val MARKER_STYLE = GazeTargets.Style(fraction = 0.005f / Layout.U, thick = 0.0012f, corner = 0.0024f)
         const val GROW = 0.01f
+        /** Hint ghost opacity range (design entities3d.ghost, changes c6: <= 0.25, 1.5 Hz pulse). */
+        const val HINT_MIN = 0.12f
+        const val HINT_MAX = 0.25f
+        const val HINT_HZ = 1.5f
+
+        /** The hint ghost's opacity at [ms] (uptime): a 1.5 Hz pulse; steady 0.2 with reduced motion. */
+        fun hintOpacity(ms: Long, reduced: Boolean): Float =
+            if (reduced) 0.2f else HINT_MIN + (HINT_MAX - HINT_MIN) * (0.5f + 0.5f * kotlin.math.sin(2 * Math.PI.toFloat() * HINT_HZ * (ms % 100_000) / 1000f))
 
         fun unlit(color: Color, opacity: Float = 1f, tex: TextureResource? = null): UnlitMaterial =
             UnlitMaterial.create(if (opacity < 1f || tex != null) BlendingMode.TRANSPARENT else BlendingMode.OPAQUE).apply {
@@ -82,6 +90,7 @@ internal class SceneResources private constructor() {
             val io = Dispatchers.IO
             val U = Layout.U
             val dotTex = async(io) { TextureResource.create(BoardTextures.dot()).keep() }
+            val ghostTex = async(io) { TextureResource.create(BoardTextures.ghostEdge()).keep() }
             val big = PieceType.entries.associateWith { t ->
                 async(io) { t.cells.map { c -> ShapeResource.createBox(Vector3(U + 2 * GROW, U + 2 * GROW, U + 2 * GROW)).offsetByTranslation(Vector3(c.x * U, c.y * U, c.z * U)).keep() } }
             }
@@ -107,7 +116,7 @@ internal class SceneResources private constructor() {
                 async(io) { r.physics = PhysicsMaterialResource().keep() },
                 async(io) { r.padShape = ShapeResource.createBox(Vector3(U, 0.004f, U)).keep() },
                 async(io) { r.tabShape = ShapeResource.createBox(Vector3(Layout.TAB_HIT.x, Layout.TAB_HIT.y, Layout.TAB_HIT.z)).offsetByTranslation(Vector3(Layout.TAB_HIT_OFFSET.x, Layout.TAB_HIT_OFFSET.y, Layout.TAB_HIT_OFFSET.z)).keep() },
-                async(io) { r.plateShape = ShapeResource.createBox(Vector3(Layout.PLATE_W, Layout.PLATE_H, 0.012f)).keep() },
+                async(io) { r.plateShape = ShapeResource.createBox(Vector3(Layout.PLATE_HIT_W, Layout.PLATE_HIT_H, Layout.PLATE_HIT_T)).keep() },
             ).awaitAll()
             r.bigShapes = big.mapValues { it.value.await() }
             r.exactShapes = exact.mapValues { it.value.await() }
@@ -115,7 +124,9 @@ internal class SceneResources private constructor() {
             r.ghostWhite = unlit(Color(0xFFFFFFFF), opacity = 0.35f).keep()
             r.ghostRed = unlit(Color(0xFFE5533D), opacity = 0.45f).keep()
             r.holeRed = unlit(Color(0xFF9B1C1C), opacity = 0.55f).keep()
-            r.hintMat = PieceType.entries.associateWith { t -> unlit(Color(t.color), opacity = 0.42f).keep() }
+            // M16 / QA K1: the hint ghost is a bright-edged, mostly see-through cell (opacity pulses HINT_MIN..HINT_MAX at 1.5 Hz)
+            val edge = ghostTex.await()
+            r.hintMat = PieceType.entries.associateWith { t -> unlit(Color(t.color), opacity = HINT_MAX, tex = edge).keep() }
             r
         }
     }
