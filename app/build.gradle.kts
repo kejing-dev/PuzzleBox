@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "io.embodit.puzzlebox"
+    namespace = "com.kejing.puzzlebox"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.embodit.puzzlebox"
+        applicationId = "com.kejing.puzzlebox"
         minSdk = 35
         targetSdk = 35
         versionCode = 3
