@@ -5,7 +5,7 @@
             android:name=".platform.DebugCommandReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.kejing.puzzlebox.DEBUG" />
+                <action android:name="io.embodit.puzzlebox.DEBUG" />
             </intent-filter>
         </receiver>
     </application>

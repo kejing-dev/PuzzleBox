@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # PuzzleBox dev harness (macOS). Pinned to one emulator: DEV (borrowed with the factory's emu_borrow.py).
-#   tools/pb.sh cmd NAME [ARG]     debug broadcast:  am broadcast -a com.kejing.puzzlebox.DEBUG --es cmd NAME --es a ARG
+#   tools/pb.sh cmd NAME [ARG]     debug broadcast:  am broadcast -a io.embodit.puzzlebox.DEBUG --es cmd NAME --es a ARG
 #   tools/pb.sh shot OUT.png       still capture of the device (pico-cli capture screenshot)
 #   tools/pb.sh log [REGEX]        logcat lines of tag PuzzleBox (optionally filtered)
 #   tools/pb.sh install            install the debug APK and start the app
 set -u
 DEV="${DEV:-emulator-5560}"
-PKG=com.kejing.puzzlebox
+PKG=io.embodit.puzzlebox
 ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 case "${1:-}" in

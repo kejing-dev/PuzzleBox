@@ -4,7 +4,7 @@
 #   DEV=emulator-5560 tools/evidence.sh "<factory>/apps/puzzle-box/build"
 set -u
 B="$1"; DEV="${DEV:-emulator-5560}"; export DEV
-ADB="$HOME/Library/Android/sdk/platform-tools/adb"; K="$(dirname "$0")/pb.sh"; PKG=com.kejing.puzzlebox
+ADB="$HOME/Library/Android/sdk/platform-tools/adb"; K="$(dirname "$0")/pb.sh"; PKG=io.embodit.puzzlebox
 P() { pico-cli interact act --package $PKG --device "$DEV" --action click --format json --text "$1" | python3 -c "import sys,json; d=json.load(sys.stdin); print('click', d.get('target',{}).get('name'), d.get('execution'))"; }
 L() { "$ADB" -s "$DEV" shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1; }
 mkdir -p "$B"

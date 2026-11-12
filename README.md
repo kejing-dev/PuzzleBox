@@ -37,7 +37,7 @@ PICO OS 6 空间应用（Shared Space，Spatial SDK 6.1.9）。桌上一只倾�
 
 ```bash
 adb install -r PuzzleBox-v0.1.2.apk
-pico-cli app launch com.kejing.puzzlebox
+pico-cli app launch io.embodit.puzzlebox
 ```
 
 Release 里的 APK 是 `./gradlew assembleRelease` 出的未签名包，用于提交 Vibe Lab；自己装机请先用自己的 key 签名，或在本仓库 `./gradlew assembleDebug` 出调试包安装。
@@ -94,7 +94,7 @@ Screenshots and the demo video were recorded on the PICO emulator with 3D action
 
 ```bash
 adb install -r PuzzleBox-v0.1.2.apk
-pico-cli app launch com.kejing.puzzlebox
+pico-cli app launch io.embodit.puzzlebox
 ```
 
 The APK on the Release is the unsigned `assembleRelease` build used for the Vibe Lab submission; sign it with your own key before installing, or build a debug APK from this repo with `./gradlew assembleDebug`.

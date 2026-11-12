@@ -1,7 +1,7 @@
 # 谜盒 PuzzleBox: project guidance
 
 A tilted clear puzzle box and a tray of lacquered blocks on the desk, PICO OS 6 Shared Space (Spatial SDK BOM 6.1.9),
-package `com.kejing.puzzlebox`, v0.1.2 (QA #2 q2-1 TabBar word colour + K7). Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
+package `io.embodit.puzzlebox`, v0.1.2 (QA #2 q2-1 TabBar word colour + K7). Design contract: spatial-app-factory `apps/puzzle-box/design-package.json`
 (A12: one main loop; `v2[]` not built: no endless boxes, no own boxes, no odd shapes, no shelf, no free placement).
 Skeleton from the factory's klotski-box project (CloudAir lineage: two containers, theme, sound pool, board-input
 template); rules / solver / scene / pages are new.
@@ -46,7 +46,7 @@ DEV=emulator-5560 tools/pb.sh install
 Emulators are shared: borrow with `python3 -I bin/emu_borrow.py borrow puzzle-box` in the factory, return after.
 
 ## Debug broadcast (QA screenshots)
-`adb shell am broadcast -a com.kejing.puzzlebox.DEBUG -p com.kejing.puzzlebox --es cmd <cmd> --es a "<arg>"` (or
+`adb shell am broadcast -a io.embodit.puzzlebox.DEBUG -p io.embodit.puzzlebox --es cmd <cmd> --es a "<arg>"` (or
 `tools/pb.sh cmd <cmd> [arg]`). Log tag `PuzzleBox`. `tools/shots.sh OUTDIR zh|en S02 S11g0 ...` captures a list.
 
 | State | Command | Notes |
